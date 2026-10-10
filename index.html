@@ -1010,8 +1010,8 @@ body {
 <main class="app">
 
   <header class="app-header">
-    <h1>随机抽取学生</h1>
-    <p>点击下方卡片载入名单 · 单次最多 20 人</p>
+    <h1 id="appTitle">随机抽取学生</h1>
+    <p id="appSubtitle">点击下方卡片载入名单 · 单次最多 20 人</p>
   </header>
 
   <div class="upload-card" id="uploadCard">
@@ -1150,6 +1150,29 @@ body {
 
   var MAX_DRAW = 20;
 
+  /* ================= URL 参数解析 ================= */
+
+  var urlParams =
+    new URLSearchParams(location.search);
+
+  var classId =
+    urlParams.get("class");
+
+  var targetFile =
+    classId ? classId + "ban.txt" : "name.txt";
+
+  var classLabel =
+    classId ? classId + "班" : "";
+
+
+  /* ================= DOM 引用 ================= */
+
+  var appTitle =
+    document.getElementById("appTitle");
+
+  var appSubtitle =
+    document.getElementById("appSubtitle");
+
   var uploadCard =
     document.getElementById("uploadCard");
 
@@ -1199,6 +1222,37 @@ body {
   var canClose = false;
 
   var lastDrawCount = 1;
+
+
+  /* ================= 根据班级更新页面文案 ================= */
+
+  if (classLabel) {
+
+    document.title =
+      classLabel + " · 随机抽取学生";
+
+    if (appTitle)
+      appTitle.textContent =
+        classLabel + " 随机抽取学生";
+
+    if (appSubtitle)
+      appSubtitle.textContent =
+        "点击下方卡片载入名单 · 单次最多 " +
+        MAX_DRAW +
+        " 人";
+
+  }
+
+  /* 更新上传提示里的文件名 */
+
+  if (uploadSub) {
+
+    uploadSub.innerHTML =
+      "请选择同目录下的 <b>" +
+      targetFile +
+      "</b>（每行一个名字）";
+
+  }
 
 
   /* ================= 音效 ================= */
@@ -2647,13 +2701,16 @@ body {
   syncCountUI();
 
 
+  /* 自动读取对应班级的名单文件 */
+
   if (
     location.protocol !==
     "file:"
   ) {
 
     fetch(
-      "name.txt?t=" +
+      targetFile +
+      "?t=" +
       Date.now(),
       {
         cache: "no-store"
@@ -2691,7 +2748,8 @@ body {
 
           onNamesLoaded(
             names,
-            "name.txt（自动读取）"
+            targetFile +
+            "（自动读取）"
           );
 
         }
@@ -2701,9 +2759,29 @@ body {
         function (err) {
 
           console.log(
-            "[init] 自动读取失败(请手动选择):",
+            "[init] 自动读取 " +
+            targetFile +
+            " 失败(请手动选择):",
             err.message
           );
+
+          /* 自动读取失败时，更新提示文案 */
+
+          if (uploadTitle) {
+
+            uploadTitle.textContent =
+              "点击载入名单文件";
+
+          }
+
+          if (uploadSub) {
+
+            uploadSub.innerHTML =
+              "未能自动读取 <b>" +
+              targetFile +
+              "</b>，请手动选择（每行一个名字）";
+
+          }
 
         }
       );
